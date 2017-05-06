@@ -485,7 +485,12 @@ class _FeedParserMixin(
             except TypeError:
                 # In Python 3, base64 takes and outputs bytes, not str
                 # This may not be the most correct way to accomplish this
-                output = _base64decode(output.encode('utf-8')).decode('utf-8')
+                try:
+                    output = _base64decode(output.encode('utf-8')).decode('utf-8')
+                except binascii.Error:
+                    pass
+                except binascii.Incomplete:
+                    pass
 
         # resolve relative URIs
         if (element in self.can_be_relative_uri) and output:

@@ -491,6 +491,9 @@ class _FeedParserMixin(
                     pass
                 except binascii.Incomplete:
                     pass
+                except UnicodeDecodeError:
+                    # It was probably not base64 encoded if we can't decode it back in utf-8.
+                    pass
 
         # resolve relative URIs
         if (element in self.can_be_relative_uri) and output:

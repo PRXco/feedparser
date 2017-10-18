@@ -34,6 +34,7 @@ __all__ = [
     'CharacterEncodingUnknown',
     'NonXMLContentType',
     'UndeclaredNamespace',
+    'TimeoutException',
 ]
 
 class ThingsNobodyCaresAboutButMe(Exception):
@@ -49,4 +50,7 @@ class NonXMLContentType(ThingsNobodyCaresAboutButMe):
     pass
 
 class UndeclaredNamespace(Exception):
+    pass
+
+class TimeoutException(Exception):
     pass

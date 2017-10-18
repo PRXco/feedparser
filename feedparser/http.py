@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals, with_statement
 import datetime
 import gzip
 import re
+import socket
 import struct
 import zlib
 
@@ -44,12 +45,14 @@ else:
     _base64decode = getattr(base64, 'decodebytes', base64.decodestring)
 
 from .datetimes import _parse_date
+from .exceptions import TimeoutException
 from .urls import _convert_to_idn
 
 try:
     basestring
 except NameError:
     basestring = str
+
 
 bytes_ = type(b'')
 
@@ -138,7 +141,7 @@ def _build_urllib2_request(url, agent, accept_header, etag, modified, referrer, 
     request.add_header('A-IM', 'feed') # RFC 3229 support
     return request
 
-def get(url, etag=None, modified=None, agent=None, referrer=None, handlers=None, request_headers=None, result=None):
+def get(url, etag=None, modified=None, agent=None, referrer=None, handlers=None, request_headers=None, result=None, timeout=None):
     if handlers is None:
         handlers = []
     elif not isinstance(handlers, list):
@@ -172,7 +175,16 @@ def get(url, etag=None, modified=None, agent=None, referrer=None, handlers=None,
     request = _build_urllib2_request(url, agent, ACCEPT_HEADER, etag, modified, referrer, auth, request_headers)
     opener = urllib.request.build_opener(*tuple(handlers + [_FeedURLHandler()]))
     opener.addheaders = [] # RMK - must clear so we only send our custom User-Agent
-    f = opener.open(request)
+    # Don't want to pass None for timeout since that'd overwrite default argument
+    # for OpenerDirector.open which isn't None.
+    try:
+        if timeout:
+            f = opener.open(request, timeout=timeout)
+        else:
+            f = opener.open(request)
+    except socket.timeout:
+        raise TimeoutException("Timeout for %s" % url)
+
     data = f.read()
     f.close()
 
